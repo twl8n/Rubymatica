@@ -1,0 +1,261 @@
+#! /usr/bin/ruby 
+
+
+require 'sqlite3'
+require 'erb'
+
+db = SQLite3::Database.new("../test.db");
+
+class Recs 
+  
+  def initialize
+    @recs = []
+  end
+  
+  def add(rec)
+    @recs << rec
+  end
+  
+  def get
+    return @recs
+  end
+  
+  def get_binding
+    binding
+  end
+end
+
+recs = Recs.new()
+
+db.execute( "select * from meta" ) do |row|
+  # process row
+  recs.add(row)
+end
+
+rhtml = ERB.new(File.read("test.html"), 0, "%<>")
+
+# puts rhtml.inspect
+
+puts rhtml.run(recs.get_binding);
+
+# recs.each { |row|
+#   #puts row.class
+#   # puts row.methods.sort
+#   # puts row.fields.class
+#   row.fields.each_index { |xx|
+#     print "#{row.fields[xx]} = #{row[xx]}\n";
+#   }
+  
+# }
+
+
+
+exit
+
+class Rt; end
+
+def Rt.test 
+  print "this is Rt.test\n";
+end
+
+Rt.test()
+
+exit
+
+# Read in name = value config file.
+
+config = {}
+ 
+File.foreach("config.txt") do |line|
+  line.strip!
+  # Skip comments, and leading whitespace and trailing whitespace.
+  if (line[0] != ?# and line =~ /\S/ )
+    ii = line.index('=')
+    if (ii)
+      config[line[0..ii - 1].strip] = line[ii + 1..-1].strip
+    else
+      config[line] = ''
+    end
+  end
+end
+ 
+
+# Print it out
+config.each do |key, value|
+  print key + " = " + value +"."
+  print "\n"
+end
+
+exit
+
+
+# This doesn't work. Posted by some nitwit who did't bother to test
+# their code before posting.
+
+def method_missing(method_name, *args)
+  if method_name.match(/=/)
+     @config[method_name] = args[0]
+  end
+end
+
+require "config.rb"
+
+puts @config
+
+# @config["param1"] # => value1
+
+exit()
+
+class Foo; end 
+class Baz; end
+def Foo.bar
+  print "foo.bar\n"
+end
+def Baz.bar
+  print "baz.bar\n";
+end
+
+Foo.bar
+Baz.bar
+
+exit()
+
+require 'optparse'
+
+options = {}
+op = OptionParser.new do |opts|
+    opts.banner = "Usage: example.rb [options]"
+
+    opts.on("-v", "--[no-]verbose [file]", "Run verbosely") do |v|
+      options[:verbose] = v
+    end
+  end
+
+op.parse!
+
+  p options
+  p ARGV
+
+
+# OptionParser.load("fname")
+
+exit()
+
+
+
+requite 'rubygems'
+require 'nokogiri'
+require 'find'
+
+class Test_child
+  def create_filespec(path, fs_parent)
+
+    fbuilder = Nokogiri::XML::Builder.new {
+      fileGrp(:ID => "stuff", :USE => "directory") {
+        inner_tag
+      }
+    }
+    #fs_parent.add_child("<test>this is filespec test</test>")
+    fs_parent.add_child(fbuilder.doc.root)
+    print "ff #{fbuilder.doc.root}\n\n\n"
+  end
+
+  def initialize
+    @builder = Nokogiri::XML::Builder.new {
+      mdWrap( 'MDTYPE' => "FITS") {
+        @fs_parent = parent;
+      }
+      
+      def fs_parent
+        return @fs_parent;
+      end
+    }
+    create_filespec("", @builder.fs_parent );
+  end
+
+  def builder
+    return @builder
+  end
+
+end
+
+puts Test_chile.new.builder.to_xml
+
+
+
+
+
+
+exit
+
+fits_xml = Nokogiri::XML(IO.read("test.xml"))
+
+builder.fs_parent.add_child(fits_xml.root)
+
+fits_xml = Nokogiri::XML(IO.read("test.xml"))
+builder.fs_parent.add_child(fits_xml.root)
+
+ puts builder.to_xml
+
+
+exit
+
+
+builder = Nokogiri::XML::Builder.new {
+  mdWrap( 'MDTYPE' => "FITS") {
+  }
+  
+}
+fits_xml = Nokogiri::XML(IO.read("/home/twl8n/dest/tmp/9d12193d-2119-4cc6-8c29-2db48494bbd9/ingest_logs/FITS-a23404be-54e8-4748-a4fc-647847017d55-readme.txt.xml"))
+
+root = builder.root;
+
+element = root.xpath('mdWrap').first
+
+puts element
+
+#puts builder.to_xml
+
+
+
+
+
+exit;
+
+
+require 'find'
+
+puts File.dirname("/home/twl8n/dest/tmp/cfc84502-2ef0-432b-b787-37fd51d86f52/ing_1/simon_test_files.zip")
+
+exit();
+
+rar_exts = Regexp.new('\.(rar|part\d{2}.rar|r\d{2})$',
+                      [Regexp::EXTENDED, 
+                       Regexp::IGNORECASE])
+
+puts rar_exts.match("stuff.part01.rar")
+
+
+exit();
+
+
+if (false) 
+
+  # Dir works fine, but doesn't return . with the list of dirs and
+  # files, and is therefore not equivalent to command line find.
+
+  #Dir.glob("**/**") {|file|
+  Dir.glob("*") {|file|
+    print "dir #{file}\n"
+  }
+  
+else 
+  Find.find("./") {|file|
+    my_file = File.new(file)
+    new_dir  = my_file.path + "/" + File.basename(file, File.extname(file))
+    print File.extname(file) + "\n"
+    print "find #{file}: #{new_dir}\n"
+  }
+  
+end
+    

@@ -1,0 +1,12 @@
+.svn/
+rmatic_constants.rb
+rmatic.db
+puid.db*
+log/*
+tmp/*
+db/*
+.*
+!.gitignore
+/archive/
+test.db
+*~

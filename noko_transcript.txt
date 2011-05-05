@@ -1,0 +1,149 @@
+[zeus ~]$ noko_simple_parse_add.rb
+class type of fits_xml is: Nokogiri::XML::Document
+class type of fits_xml.root is: Nokogiri::XML::Element
+class type of parent is: Nokogiri::XML::Element
+after calling add_child() class type of fits_xml.root is: NilClass
+
+The created XML:
+
+ <?xml version="1.0"?>
+<mdWrap MDTYPE="FITS">
+  <xmlData>
+    <fits xmlns="http://hul.harvard.edu/ois/xml/ns/fits/fits_output" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://hul.harvard.edu/ois/xml/ns/fits/fits_output http://hul.harvard.edu/ois/xml/xsd/fits/fits_output.xsd" version="0.3.2" timestamp="9/22/10 4:41 PM">
+  <identification status="SINGLE_RESULT">
+    <identity format="Plain text" mimetype="text/plain">
+      <tool toolname="file utility" toolversion="5.03"/>
+    </identity>
+  </identification>
+  <fileinfo>
+    <filename toolname="OIS File Information" toolversion="0.1" status="SINGLE_RESULT">/home/twl8n/dest/7578b42a-c2c9-446c-8ec9-3ebfa15e9fe9/ingest_1/readme.txt</filename>
+    <md5checksum toolname="OIS File Information" toolversion="0.1" status="SINGLE_RESULT">ecc35251e91f68b3cc9c8ad74ee285b4</md5checksum>
+  </fileinfo>
+  <filestatus>
+    <well-formed toolname="Jhove" toolversion="1.5" status="SINGLE_RESULT">true</well-formed>
+    <valid toolname="Jhove" toolversion="1.5" status="SINGLE_RESULT">true</valid>
+  </filestatus>
+  <metadata>
+    <text>
+      <linebreak toolname="Jhove" toolversion="1.5" status="SINGLE_RESULT">LF</linebreak>
+      <charset toolname="Jhove" toolversion="1.5">US-ASCII</charset>
+    </text>
+  </metadata>
+  <toolOutput>
+    <tool name="file utility" version="5.03">
+      <fileUtilityOutput>
+        <rawOutput>ASCII text
+text/plain; charset=us-ascii</rawOutput>
+        <mimetype>text/plain</mimetype>
+        <format>Plain text</format>
+        <charset>US-ASCII</charset>
+      </fileUtilityOutput>
+    </tool>
+  </toolOutput>
+</fits>
+  </xmlData>
+</mdWrap>
+
+[zeus ~]$ noko_late_parse_add.rb
+class type of fits_xml is: Nokogiri::XML::Document
+class type of fits_xml.root is: Nokogiri::XML::Element
+class type of parent is: Nokogiri::XML::Element
+after calling add_child() class type of fits_xml.root is: NilClass
+
+The created XML:
+
+ <?xml version="1.0"?>
+<mdWrap MDTYPE="FITS">
+  <xmlData>
+    <fits xmlns="http://hul.harvard.edu/ois/xml/ns/fits/fits_output" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://hul.harvard.edu/ois/xml/ns/fits/fits_output http://hul.harvard.edu/ois/xml/xsd/fits/fits_output.xsd" version="0.3.2" timestamp="9/22/10 4:41 PM">
+  <identification status="SINGLE_RESULT">
+    <identity format="Plain text" mimetype="text/plain">
+      <tool toolname="file utility" toolversion="5.03"/>
+    </identity>
+  </identification>
+  <fileinfo>
+    <filename toolname="OIS File Information" toolversion="0.1" status="SINGLE_RESULT">/home/twl8n/dest/7578b42a-c2c9-446c-8ec9-3ebfa15e9fe9/ingest_1/readme.txt</filename>
+    <md5checksum toolname="OIS File Information" toolversion="0.1" status="SINGLE_RESULT">ecc35251e91f68b3cc9c8ad74ee285b4</md5checksum>
+  </fileinfo>
+  <filestatus>
+    <well-formed toolname="Jhove" toolversion="1.5" status="SINGLE_RESULT">true</well-formed>
+    <valid toolname="Jhove" toolversion="1.5" status="SINGLE_RESULT">true</valid>
+  </filestatus>
+  <metadata>
+    <text>
+      <linebreak toolname="Jhove" toolversion="1.5" status="SINGLE_RESULT">LF</linebreak>
+      <charset toolname="Jhove" toolversion="1.5">US-ASCII</charset>
+    </text>
+  </metadata>
+  <toolOutput>
+    <tool name="file utility" version="5.03">
+      <fileUtilityOutput>
+        <rawOutput>ASCII text
+text/plain; charset=us-ascii</rawOutput>
+        <mimetype>text/plain</mimetype>
+        <format>Plain text</format>
+        <charset>US-ASCII</charset>
+      </fileUtilityOutput>
+    </tool>
+  </toolOutput>
+</fits>
+  </xmlData>
+</mdWrap>
+
+[zeus ~]$ noko_late_child.rb
+Parent class (accessor 1): Nokogiri::XML::Element
+Parent class (accessor 2): Nokogiri::XML::Element
+pre: <?xml version="1.0"?>
+<new_element ID="stuff" USE="directory">
+  <inner_element>one</inner_element>
+</new_element>
+
+post: <?xml version="1.0"?>
+
+pre: <?xml version="1.0"?>
+<new_element ID="stuff" USE="directory">
+  <inner_element>two</inner_element>
+</new_element>
+
+post: <?xml version="1.0"?>
+
+<?xml version="1.0"?>
+<wrap_it WRAP="demo">
+  <test_ele>literal string element add</test_ele>
+  <new_element ID="stuff" USE="directory">
+    <inner_element>one</inner_element>
+  </new_element>
+  <test_ele>literal string element add</test_ele>
+  <new_element ID="stuff" USE="directory">
+    <inner_element>two</inner_element>
+  </new_element>
+</wrap_it>
+[zeus ~]$ noko_test_child.rb
+Parent class: Nokogiri::XML::Element
+pre: <?xml version="1.0"?>
+<new_element ID="stuff" USE="directory">
+  <inner_element>one</inner_element>
+</new_element>
+
+post: <?xml version="1.0"?>
+
+pre: <?xml version="1.0"?>
+<new_element ID="stuff" USE="directory">
+  <inner_element>two</inner_element>
+</new_element>
+
+post: <?xml version="1.0"?>
+
+<?xml version="1.0"?>
+<wrap_it WRAP="demo">
+  <test_ele>literal string element add</test_ele>
+  <new_element ID="stuff" USE="directory">
+    <inner_element>one</inner_element>
+  </new_element>
+  <test_ele>literal string element add</test_ele>
+  <new_element ID="stuff" USE="directory">
+    <inner_element>two</inner_element>
+  </new_element>
+</wrap_it>
+[zeus ~]$ 
+[zeus ~]$ exit
