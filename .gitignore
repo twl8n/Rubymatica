@@ -6,7 +6,8 @@ log/*
 tmp/*
 db/*
 .*
+*.log
 !.gitignore
-/archive/
+archive/
 test.db
 *~
