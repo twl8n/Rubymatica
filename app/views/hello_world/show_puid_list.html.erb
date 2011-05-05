@@ -1,0 +1,49 @@
+<html>
+  <head><title>PUID category editor</title></head>
+  <body>
+    <a href="report">Back to Report</a>
+    <br>
+    <br>
+    <% form_tag('update_puid_list', :method => 'post') do %>
+    <!-- form action="update_puid_list" method="post" -->
+    <%= submit_tag("submit") %>
+    <table cellpadding="3">
+      <% @colored_row = '#EEEDFD'
+	 @white_row = '#FFFFFF'
+	 @color_toggle = true
+	 @loh.each { |rh|
+	 @cat = "#{rh['rmatic_category']}"
+	 if (@color_toggle)
+	 @color_toggle = false
+	 @bgcolor = @white_row
+	 else
+	 @color_toggle = true
+	 @bgcolor = @colored_row
+	 end # end of if
+	 %>
+      <tr bgcolor="<%= @bgcolor %>" >
+	<td valign="top">
+	  <div align="right">
+	    <%= rh['format_id'] %> <%= rh['puid'] %> <%= rh['format_name'] %>&nbsp;&nbsp;&nbsp;&nbsp;
+	  </div>
+	</td>
+	<td valign="top">
+	  <% opt_string = ""
+	     @cat_order.each { |ch|
+	     selected = ""
+	     if (rh['rmatic_category'].eql?(ch['value']))
+	     selected = " selected='selected'"
+	     end
+	     opt_string.concat("<option#{selected} value=\"#{ch['value']}\">#{ch['label']}</option>\n")
+	     } %>
+	  <%= select_tag(rh['puid'],opt_string) %>
+	</td>
+      </tr>
+      <% } %>
+      
+    </table>
+    <%= submit_tag("submit") %>
+    <!-- /form-- >
+    <% end %>
+  </body>
+</html>

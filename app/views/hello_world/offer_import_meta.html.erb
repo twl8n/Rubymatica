@@ -1,0 +1,28 @@
+<html>
+  <head><title>Import file list</title></head>
+<body>
+  <pre><%= @message %></pre>
+  <a href="./">Home</a>
+  <br>
+  <table border="0" cellpadding="3" cellspacing="0">
+    <% if @f_info.length < 1 %>
+    <tr bgcolor="#FFFFFF">
+      <td valign="top">
+	Nothing to import.
+      </td>
+    </tr> 
+    <% else
+       @f_info.each { |rh| %>
+    <tr bgcolor="<%= rh[:bgcolor] %>">
+      <td valign="top">
+	<a href="import_meta?name=<%=rh[:orig]%>&uuid=<%=@uuid%>"><%=rh[:orig]%></a>
+      </td>
+    </tr>
+    <% }
+       end
+       %>
+    
+  </table>
+  <hr>
+</body>
+</html>

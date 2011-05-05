@@ -1,0 +1,33 @@
+<html>
+  <head><title>Upload file</title></head>
+  <body>
+    <a href="report">Home</a>
+    <br>
+    <p>
+      File Upload. 
+    </p>
+    <% form_tag('do_upload', :method => 'post', :multipart => true) do %>
+    
+    <% if (@uuid.empty?) %>
+    <p>
+      Uploading to the ingest pre-process area.
+      <br>
+      Please only upload .zip or .tar files.
+      </p>
+    <% else %>
+    <%= hidden_field_tag("uuid", @uuid) %>
+    <p>
+      Uploading to meta_data for: <%= @ig_dir %> 
+      <br>
+      uuid: <%= @uuid %> 
+      </p>
+    <% end %>
+    <p>
+      <label for="do_file">Select File</label> : 
+      <%= file_field_tag('upload') %>
+    </p>
+    
+    <%= submit_tag "Upload" %>
+    <% end %>
+  </body>
+</html>

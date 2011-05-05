@@ -1,0 +1,104 @@
+<html>
+  <head><title>Rubymatica File List</title></head>
+<body>
+  <a href="report">Back to Report</a>
+  <br>
+  <br>
+  <a href="#full">Jump to full list</a>
+  <br>
+  <hr>
+  <center><strong>Category summary for accession ingested files</strong></center>
+  <table cellpadding="3">
+    <% @cat_hash.keys.sort.each { |key| %>
+    <tr>
+      <td><%= key %></td>
+      <td><%= @cat_hash[key] %></td>
+      </tr>
+    <% } %>
+    <tr>
+      <td><hr></td>
+      <td><hr></td>
+    </tr>
+    <tr>
+      <td>Total</td>
+      <td><%= @file_total %></td>
+    </tr>
+  </table>
+
+
+  <hr>
+  <center><strong>DROID identities for the accession ingested files</strong></center>
+  <br>
+  <table cellpadding="3">
+    
+    <tr>
+      <td valign="top">
+	PUID<br>
+	(DROID hit count)
+      </td>
+      <td valign="top">
+	Format
+      </td>
+      <td valign="top">
+	Mime-type 
+      </td>
+      <td valign="top">
+	File name
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+	<hr>
+      </td>
+      <td>
+	<hr>
+      </td>
+      <td>
+	<hr>
+      </td>
+      <td>
+	<hr>
+      </td>
+    </tr>
+
+
+    <%
+       @bgcolor = "#FFFFFF"
+       @loh.each { |rh|
+	if @bgcolor.match(/FFFFFF/)
+	@bgcolor = "#CCDDFF"
+	else
+	@bgcolor = "#FFFFFF"
+	end
+       %>
+    <tr bgcolor="<%= @bgcolor %>">
+      <td>
+	<nobr>(<%= rh['r_count']%>) <%= rh['ext_id'] %><nobr>
+      </td>
+      <td>
+	<%= rh['format'] %>
+      </td>
+      <td>
+	<% if ! rh['ext_type'].to_s.empty? %>
+	<%= rh['ext_type'] %>
+	<% elsif ! rh['alt_mime'].to_s.empty? %>
+	<%= rh['alt_mime'] %>
+	<% end %>
+      </td>
+
+      <td>
+	<nobr><%= rh['short_name'] %></nobr>
+      </td>
+    </tr>
+    <% } %>
+    
+  </table>
+  <a name="full"></a>
+  <hr>
+  <center><strong>Full list of files in the SIP</strong></center>
+  
+  <pre><%= @logs %></pre>
+  
+</body>
+</html>

@@ -1,0 +1,11 @@
+<html>
+<body>
+  <pre>
+    <%= @output %>
+    <% @recs.get.each { |row| %>
+    <%= row['id']%>: <%= row['name']%> = <%=row['value'] %>
+    <% } %>
+
+    </pre>
+</body>
+</html>

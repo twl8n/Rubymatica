@@ -1,0 +1,171 @@
+<html>
+  <head><title>Rubymatica</title></head>
+<body>
+  <pre><%= @message %></pre>
+  <a href="report">Refresh</a> | <a href="offer_upload">Upload file for processing</a> | <a href="show_puid_list">View/edit PUID categories</a>
+  <br>
+  <a href="http://<%= request.server_name %>/<%= Taper_url %>/">TAPER Submission Agreement Builder Tool</a> |
+  <a href="http://<%= request.server_name %>/~twl8n/min_lims/">Donor Survey</a>
+  <br>
+  <a href="https://docs.google.com/document/d/1gBLVdj9rPFEgyWvY1vesfywHkPN0otQtT-tQ4r6VbfU/edit?hl=en#">Rubymatica Guide</a>
+  <br>
+  <table border="0" cellpadding="3" cellspacing="0">
+    <tr>
+      <td colspan="3">
+	<hr>
+      </td>
+    <tr>
+      <td valign="bottom">Ingest or import<br>(staging area)<hr></td>
+      <td valign="bottom">Ingest name<br>Ingest UUID<br>Last modified<br>Status<hr></td>
+      <td valign="bottom">Activities<hr></td>
+    </tr>
+    <%  @f_info.each { |rh| %>
+    <tr bgcolor="<%= rh[:bgcolor] %>">
+      <td valign="top">
+	<% if rh[:proc_ok] %>
+	Ingest: <a href="process_sip?name=<%=rh[:orig]%>"><%= rh[:orig]%></a>
+	<% elsif ! rh[:orig].to_s.empty? %>
+	Import: <%= rh[:orig] %>
+	<% end %>
+      </td>
+      <td valign="top">
+	<strong><%= rh[:dir_short] %></strong><br><nobr><%= rh[:name] %></nobr><br><%= rh[:mtime] %>
+	<br>
+	Status: <a href="full_status?uuid=<%=rh[:name]%>"><%= rh[:short] %></a>
+      </td>
+      <td valign="top">
+	<% if (rh[:name].length > 5) %>
+	<table cellpadding="0">
+	  <tr><td valign="top">
+	      <a href="show_logs?uuid=<%=rh[:name]%>">Show logs</a>
+	      <br>
+	      <a href="file_list?uuid=<%=rh[:name]%>">File list</a> 
+	      <br>
+	      <a href="build_bag?uuid=<%=rh[:name]%>">Create BagIt Bag</a>
+	      <br>
+	    </td>
+	    <td>&nbsp;&nbsp;&nbsp;</td>
+	    <td valign="top">
+	      <a href="offer_upload?uuid=<%=rh[:name]%>&dir=<%=rh[:dir_short]%>">Upload metadata</a>
+	      <br>
+	      <a href="offer_import_meta?uuid=<%=rh[:name]%>">Import metadata</a>
+	      <br>
+	      <a href="update_taper?uuid=<%=rh[:name]%>">Update TAPER</a>
+	  </td></tr>
+	</table>
+	<br>
+	<% else %>
+	<%= rh[:name] %>
+	<% end %>
+      </td>
+    </tr>
+    <% } %>
+    
+  </table>
+  
+  <hr>
+  
+  <p>
+    --
+    <br>
+    Create BagIt Bag - Create a BagIt Bag file bag.zip. Go to the File
+    list for a link to download the bag.
+  </p>
+  
+  <p>
+    File list - List all the files of an ingest. Shows content
+    directories, meta data directories, and all the files. Certain
+    files in the list (such as METS.xml) can be viewed or downloaded.
+  </p>
+
+  <P>
+    Import metadata - Move a file from the ingest staging area into
+    the metadata directory of the given ingest. This is currently only
+    useful with survey data. The survey web site knows to put an
+    extracted survey into the Rubymatica ingest staging area.
+  </P>
+  
+  <p>
+    Ingest UUID - The Universally Unique Identifier assigned to a
+    given ingest by Rubymatica. Each ingest is contained in a unique
+    directory named by the UUID.
+  </p>
+
+  <p>
+    Ingest or import - Click the name of an ingest to process it
+    through Rubymatica. The ingest must be a .tar, .zip, or a
+    directory. Small ingests take less than a minute. A big ingest may
+    take several minutes. Processing of ingests takes place in a
+    background task independent of your web browser. Also in this
+    column are files that have been uploaded or extracted from the
+    donor survey tool. (See the donor survey tool for details.) Any
+    individual files are available for import into an already
+    processed ingest. In order to import a file as meta data, click
+    the "Import metadata" link for the specific ingest.
+    </p>
+
+  <p>
+    Intest name - This name is determined from the name of the top
+    level folder in an archive file, or from the archive file name
+    itself. If the name is more than 15 characters long, it will be
+    displayed in a truncated form with an elipsis.
+  </p>
+  
+  <p>
+    Last modified - The last modified time stamp on the ingest
+    directory. This the date and time of the most recent change to the
+    ingest.
+  </p>
+
+  <p>
+    Refresh - Reload this page
+  </p>
+
+  <p>
+    Show logs - Display a web page with some of the log files. There
+    is more status information available coming soon, and better sorting
+    soon.
+    </p>
+  <p>
+    Status: "Message" - Show the most recent status "message" of an
+    ingest (truncated to 20 characters for display in this
+    table). Once proceesing is complete, this will say "Processing
+    complete". Click the link to see details. Refreshing the main
+    report home page updates with the most recent status message. You
+    may also reload the status details page to get the most current
+    full status.
+  </p>
+  
+  <p>
+    Update taper - Modify a TAPER submission agreement with Rubymatica
+    machine-collected meta data. The submission agreement is
+    modified. Currently, only a few of the TAPER elements are
+    modified. The name of the submission agreement must be
+    "taper_submission.xml". You may download the submission agreement
+    XML file from the File list. The submission agreement is created
+    by running the Tufts TAPER Submission Agreement Builder Tool
+    (SABT), downloading the XML, renaming the XML, and uploading the
+    XML via the "Upload metadata" link.
+  </p>
+
+  <p>
+    Upload file for processing - Upload an ingest .tar or .zip
+    file. After upload the file name will appear in the "Ingest or
+    import" column.
+  </p>
+
+  <p>
+    Upload metadata - Allows you to upload a file to the metadata area
+    of the ingest. The uploaded files become part of the SIP. You must
+    remember to re-run the bag creation.
+  </p>
+
+  <p>
+    View/edit PUID categories - View and/or edit the PRONOM PUID
+    categories that are used to generate the "Category summary for
+    accession ingested files" on the "File list" page. This is a quick
+    fix to create institutional specific categories.
+  </p>
+  
+</body>
+</html>
