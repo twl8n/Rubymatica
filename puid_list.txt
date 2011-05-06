@@ -593,7 +593,7 @@ insert into puid_info (format_id, format_mimetype, format_name, puid, format_ver
 insert into puid_info (format_id, format_mimetype, format_name, puid, format_version) values ( '831', '', '3DM', 'x-fmt/435', '3');
 insert into puid_info (format_id, format_mimetype, format_name, puid, format_version) values ( '843', 'application/octet-stream', 'CATIA Model', 'x-fmt/436', '4');
 insert into puid_info (format_id, format_mimetype, format_name, puid, format_version) values ( '848', 'application/octet-stream', 'CATIA Project', 'x-fmt/437', '4');
-insert into puid_info (format_id, format_mimetype, format_name, puid, format_version) values ( '849', 'application/octet-stream', 'CATIA Material Description', <'x-fmt/438', '5');
+insert into puid_info (format_id, format_mimetype, format_name, puid, format_version) values ( '849', 'application/octet-stream', 'CATIA Material Description', 'x-fmt/438', '5');
 insert into puid_info (format_id, format_mimetype, format_name, puid, format_version) values ( '851', 'application/octet-stream', 'CATIA Model (Part Description)', 'x-fmt/439', '5');
 insert into puid_info (format_id, format_mimetype, format_name, puid, format_version) values ( '852', 'application/octet-stream', 'CATIA Product Description', 'x-fmt/440', '5');
 insert into puid_info (format_id, format_mimetype, format_name, puid, format_version) values ( '854', 'application/octet-stream', 'AutoCAD Database File Locking Information', 'x-fmt/441', 'n/a');
