@@ -151,9 +151,20 @@ cd detox-1.2.0
 make
 make install
 
-# Before running rubymatica
+# Download Rubymatica from github, and to a few tasks to get things
+# ready. The install directory is named "am_ruby" for historical
+# purposes, and to be consistent with this documentation. You may name
+# it anything you like.
 
-cd ~/am_ruby
+cd /home/mst3k
+git clone git@github.com:twl8n/Rubymatica.git am_ruby
+cd am_ruby/
+cp -a db_dist db
+cp rmatic_constants.rb.dist rmatic_constants.rb
+emacs rmatic_constants.rb
+mkdir ~/orig
+mkdir ~/dest
+mkdir ~/archive
 cat schema_puid.sql | sqlite3 puid.db
 cat puid_list.txt | sqlite3 puid.db
 
@@ -481,8 +492,9 @@ should just work.
 List of files
 -------------
 
-Several directories in rmatic_constants.rb must be manually created as
-part of the Rubymatica install. See rmatica_constants.rb.dist for details.
+Several directories referred to in rmatic_constants.rb must be
+manually created as part of the Rubymatica install. See
+rmatica_constants.rb.dist for details.
 
 
 --
