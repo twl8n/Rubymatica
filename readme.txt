@@ -7,7 +7,6 @@ Install required packages
 How to install and run with Ruby Enterprise and CentOS 5
 Troubleshooting
 How to install Bagit
-How to update schema_fits.sql and xml_fits2sql.xsl
 How to update a production instance
 How to add a new controller
 List of files
@@ -44,8 +43,6 @@ Archivematica's SIP creation, but over all is quite similar.
 Install required packages
 -------------------------
 
-
-x list of required packages for rubymatica (from am_ruby/readme.txt)
 
 yum packages for:
 clamscan (clamav), uuid, sqlite3, xsltproc, zip, unzip,
@@ -96,7 +93,6 @@ WARNING: Your ClamAV installation is OUTDATED!
 ...
 Database updated (922925 signatures) from database.clamav.net (IP: 64.246.134.219)
 [root@aims ~]# 
-
 
 x install 7za aka p7 from sourceforge sources
 
@@ -167,6 +163,7 @@ mkdir ~/dest
 mkdir ~/archive
 cat schema_puid.sql | sqlite3 puid.db
 cat puid_list.txt | sqlite3 puid.db
+mkdir tmp
 
 
 
@@ -396,20 +393,6 @@ Installing RDoc documentation for validatable-1.6.7...
 
 
 
-How to update schema_fits.sql and xml_fits2sql.xsl
---------------------------------------------------
-
-For historical reasons, and to keep trash files out of Rubymatica, the
-FITS xsl development is in another directory. When those files are
-updates, one must remember to manually update the copies in
-Rubymatica.
-
-cp ~/aims_1/fits_app/schema_fits.sql .
-cp xml_fits2sql.xsl .
-svn commit -m"update"
-
-
-
 How to update a production instance
 -----------------------------------
 
@@ -634,7 +617,9 @@ The command line wrapper for Rubymatica. See ./process_sip.rb --help
 --
 ./schema_puid.sql
 
-PUID schema. Only one time when Rubymatica is installed:
+PUID database table schema. Run the commands below one time when
+Rubymatica is installed. (This is already documented in the "Install
+required packages" section.)
 
 cat schema_puid.sql | sqlite3 puid.db
 cat puid_list.txt | sqlite3 puid.db

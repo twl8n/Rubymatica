@@ -19,7 +19,7 @@ op = OptionParser.new { |opts|
     arg = "dd"
   }
 
-  opts.on("-i", "--ingest [ingest_dir_name]", "Process directory ingest_dir_name") { |ii|
+  opts.on("-i", "--ingest [ingest_name]", "Process directory or archive file ingest_name") { |ii|
     ingest_dir = ii
     arg = "in"
   }
