@@ -169,7 +169,7 @@ class HelloWorldController < ApplicationController
   def build_bag
     uuid = params[:uuid]
     dir_uuid = "#{Dest}/#{uuid}"
-    create_bag(dir_uuid, @mdo)
+    Create_bag.new(dir_uuid, @mdo)
     redirect_to :action => 'report'
   end
 
@@ -825,7 +825,7 @@ class HelloWorldController < ApplicationController
     new_taper_fd.close() # close() is apparently also from IO.
 
     @mdo.set_message("Submission agreement updated.", true)
-    save_status(uuid, "Submission agreement updated.")
+    Rubymatica.save_status(uuid, "Submission agreement updated.")
 
     redirect_to :action => 'report'
   end

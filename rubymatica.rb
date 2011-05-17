@@ -20,6 +20,104 @@ module Rmatic
   # unbuffer output.
   STDOUT.sync = true
 
+  class Create_bag
+
+    def initialize(dir_uuid, mdo)
+      # Given a uuid, create a bagit bag. mdo is a message dohicky object.
+
+      uuid = File.basename(dir_uuid);
+      Rubymatica.save_status(uuid, "Starting bag creation");
+
+      # Several of the commands here are backticked Linux commands because
+      # pure Ruby is either awkward or outright buggy. 
+
+      # If a bag dir already exists, then exit. File.exist? works for dirs
+      # too. There is no Dir.exist?.
+      
+      msg_str = ""
+      bag_dir = File.join(dir_uuid, "bag")
+      bag_file = File.join(dir_uuid, Bagit_file)
+
+      if (File.exist?(bag_dir))
+        FileUtils.rm_rf(bag_dir)
+        msg_str = "Removed existing bag dir.\n"
+      end
+      
+      if (File.exist?(bag_file))
+        FileUtils.rm_f(bag_file)
+        msg_str.concat("Removed existing bag file.\n")
+      end
+      
+      if (! msg_str.empty?)
+        Rubymatica.save_status(uuid, msg_str);
+      end
+
+      if (! mdo.to_s.empty?)
+        mdo.set_message(msg_str, true)
+      else
+        print msg_str
+      end
+
+      # Save the list of top level files and dirs before the bag dir is
+      # created. Use the pure Ruby method of getting the top level list of
+      # files and directories.
+
+      top_level_list = Dir[File.join(dir_uuid, '*')]
+
+      # New bagit object also creates ./bag and /bag/data
+
+      bag = BagIt::Bag.new(bag_dir) # "#{dir_uuid}/bag"
+      Rubymatica.save_status(uuid, "New bag object created");
+      hash = bag.bag_info()
+      hash["Internal-Sender-Identifier"] = dir_uuid
+
+      bag.write_bag_info(hash)
+
+      # Copy files from dir_uuid into bag/data by each()ing through the
+      # list. Don't forget to chomp the copy_me origins because they came
+      # from a backticked command. FileUtils.cp_r has a bug, so we can't
+      # use it.
+
+      top_level_list.each { |copy_me|
+        copy_me.chomp!
+        `#{Cp_exe} -a #{copy_me} #{bag_dir}/data`
+      }
+
+      # bag_files are all files in data_dir, recursive
+      # tag_files are only files in the top level bag dir.
+
+      bag.manifest!
+      bag.tagmanifest!
+
+      # Create the bagit file in the main directory. Need to use -r to
+      # recursively add files. chdir to the Dest directory, so that the
+      # paths in the zip file will begin with the uuid of the
+      # ingest. File.basename() gets the last component of a path, even if
+      # that component is a directory and not a file.
+      
+      Dir.chdir(dir_uuid)
+
+      rel_path = File.basename(dir_uuid)
+
+      `#{Zip_exe} -r #{Bagit_file} bag`
+      Rubymatica.save_status(uuid, "Zipping bag directory");
+
+      msg_final = "#{dir_uuid}/#{Bagit_file} created."
+      mdo.set_message(msg_final, true)
+      Rubymatica.save_status(uuid, msg_final)
+      Rubymatica.save_status(uuid, "Bag created")
+
+      # We can't easily use pure Ruby to delete because Dir[] doesn't have a
+      # depth-first option. 'find' would work, but since we're deleting
+      # everything in the bag directory tree, we might as well use
+      # /bin/rm.
+
+      # nov 23 2010 Change to just use .rm_rf
+
+      FileUtils.rm_rf(bag_dir)
+    end 
+  end
+
   class Msg_dohicky
     # Set and get messages to show in web pages. Messages are saved in a
     # database so they'll survive page loads. We don't have logins so the
@@ -248,7 +346,7 @@ module Rmatic
       if (key)
         return @detox_dic[key][:name]
       else
-        save_status(inst_dir_uuid, "bad key: #{key}")
+        Rubymatica.save_status(inst_dir_uuid, "bad key: #{key}")
         return nil
       end
     end
@@ -686,28 +784,13 @@ module Rmatic
       return all_items;
     end 
 
-    private
-
-    # Create an error log based on port number, or pid. The only way to
-    # get a port number is to have it suplied on the process_sip.rb
-    # command line. Remember: rubymatica is asynchronous so there is
-    # nothing we inherit from the parent process.
-    
-    def err_name
-      if (defined? @port_num)
-        return "error_#{@port_num}.log"
-      else
-        return "error_#{Process.pid}.log"
-      end
-    end
-
-    def save_status(uuid, msg)
-      # Save some status message into the local ingest database (info.db)
-      # for a given uuid (ingest). This is the overview log of what
-      # happened, and there is no separate log file for these
-      # messaged. These status messages are saved in real time as each step
-      # of processing completes. Notice the many save_status() calls
-      # littered throughout process_one().
+    def self.save_status(uuid, msg)
+      # Utility class method. Save some status message into the local
+      # ingest database (info.db) for a given uuid (ingest). This is
+      # the overview log of what happened, and there is no separate
+      # log file for these messaged. These status messages are saved
+      # in real time as each step of processing completes. Notice the
+      # many save_status() calls littered throughout process_one().
 
       fn = "#{Dest}/#{uuid}/#{Meta}/#{Db_name}"
       if (! File.exists?("#{fn}"))
@@ -726,6 +809,22 @@ module Rmatic
       # database more than once can be catastrophic." Multiple close()
       # calls with SQLite seem fine.
       db.close();
+    end
+
+
+    private
+
+    # Create an error log based on port number, or pid. The only way to
+    # get a port number is to have it suplied on the process_sip.rb
+    # command line. Remember: rubymatica is asynchronous so there is
+    # nothing we inherit from the parent process.
+    
+    def err_name
+      if (defined? @port_num)
+        return "error_#{@port_num}.log"
+      else
+        return "error_#{Process.pid}.log"
+      end
     end
 
 
@@ -997,7 +1096,7 @@ module Rmatic
             new_dir  = base_dir + "/" + stem + "_dir" + suffix.to_s
             if (suffix > 200)
               print "Error: suffix exceeded\n";
-              save_status(dir_uuid, "Error: exceeded max suffix creating dir for: #{base_dir}/#{stem}")
+              Rubymatica.save_status(dir_uuid, "Error: exceeded max suffix creating dir for: #{base_dir}/#{stem}")
               exit
             end
           end
@@ -1005,7 +1104,7 @@ module Rmatic
           if (found_ext.match(rar_exts))
 
             FileUtils.mkdir(new_dir)
-            save_status(dir_uuid, "unrar-nonfree x #{found_file} #{new_dir}")
+            Rubymatica.save_status(dir_uuid, "unrar-nonfree x #{found_file} #{new_dir}")
             `#{Unrar_exe} x "#{found_file}" "#{new_dir}" >> #{log_path}/process_sip.log 2>&1`
             easy_extract(new_dir, log_path, dir_uuid)
 
@@ -1019,7 +1118,7 @@ module Rmatic
             #Cannot use absolute pathnames for this command
 
             FileUtils.mkdir(new_dir)
-            save_status(dir_uuid, "7za x -o#{new_dir} #{found_file}")
+            Rubymatica.save_status(dir_uuid, "7za x -o#{new_dir} #{found_file}")
             `#{Sevenza_exe} x -o"#{new_dir}" "#{found_file}" >> #{log_path}/process_sip.log 2>&1`
             easy_extract(new_dir, log_path, dir_uuid)
 
@@ -1051,9 +1150,9 @@ module Rmatic
 
       if (! File.exists?(dc_file))
         FileUtils.cp(Orig_dc, dc_file)
-        save_status(dir_uuid, "Dublin core: Wrote #{dc_file}")
+        Rubymatica.save_status(dir_uuid, "Dublin core: Wrote #{dc_file}")
       else
-        save_status(dir_uuid, "Dublin core: File already exists #{dc_file}")
+        Rubymatica.save_status(dir_uuid, "Dublin core: File already exists #{dc_file}")
       end
     end
 
@@ -1096,23 +1195,23 @@ module Rmatic
       
       # Create meta data directory
       FileUtils.mkdir_p(md_dir);
-      save_status(dir_uuid, "Created dir #{md_dir}")
+      Rubymatica.save_status(dir_uuid, "Created dir #{md_dir}")
 
       FileUtils.mkdir_p("#{Dest}/#{dir_uuid}")
-      save_status(dir_uuid, "Created dir #{Dest}/#{dir_uuid}")
+      Rubymatica.save_status(dir_uuid, "Created dir #{Dest}/#{dir_uuid}")
       
       FileUtils.mkdir_p(igl_dest)
-      save_status(dir_uuid, "Created dir #{igl_dest}")
+      Rubymatica.save_status(dir_uuid, "Created dir #{igl_dest}")
       
       # Create the possible virus directory.
       FileUtils.mkdir_p(pv_dir);
-      save_status(dir_uuid, "Created dir #{pv_dir}")
+      Rubymatica.save_status(dir_uuid, "Created dir #{pv_dir}")
       
       # Create ingest / accession directory
       FileUtils.mkdir_p(ac_dir);
-      save_status(dir_uuid, "Created dir #{ac_dir}")
+      Rubymatica.save_status(dir_uuid, "Created dir #{ac_dir}")
 
-      save_status(dir_uuid, "Processing directory: #{Accession_dir} uuid: #{dir_uuid}")
+      Rubymatica.save_status(dir_uuid, "Processing directory: #{Accession_dir} uuid: #{dir_uuid}")
 
       # For now do not leave the db open. Other code that needs it will
       # open it. Just create the db if necessary. Opening the db, leaving
@@ -1165,9 +1264,9 @@ module Rmatic
         # writes all i/o to #{log_path}/process_sip.log
         extract_path = easy_extract(extract_orig, igl_dest, dir_uuid)
         if (extract_path.empty?)
-          save_status(dir_uuid, "Nothing to extract from #{extract_path}")
+          Rubymatica.save_status(dir_uuid, "Nothing to extract from #{extract_path}")
         else
-          save_status(dir_uuid, "Extracted #{extract_orig} to #{extract_path}")
+          Rubymatica.save_status(dir_uuid, "Extracted #{extract_orig} to #{extract_path}")
           # If our unpacked archive resulted in a single top level
           # directory, make the ingest that top level
           # directory. Find.find() always finds the current dir as element
@@ -1183,7 +1282,7 @@ module Rmatic
           
           if (file_list.length >=2 and File.directory?(file_list[1]))
             extract_path = file_list[1]
-            save_status(dir_uuid, "After extract, ingest folder: #{file_list[1]}")
+            Rubymatica.save_status(dir_uuid, "After extract, ingest folder: #{file_list[1]}")
           end
         end
       end
@@ -1209,7 +1308,7 @@ module Rmatic
       # when we start using Accession_dir, along with some convoluted
       # logic.
 
-      save_status(dir_uuid, "Ingesting from origin full_path: #{extract_path}")
+      Rubymatica.save_status(dir_uuid, "Ingesting from origin full_path: #{extract_path}")
       
       # I've left the code below here for historical reference. Someone
       # should make sure that there can't be funny chars in ingest
@@ -1230,16 +1329,16 @@ module Rmatic
 
       tub = "#{Dest}/#{dir_uuid}/#{Accession_dir}"
 
-      save_status(dir_uuid, "Final ingest destination directory: #{tub}")
+      Rubymatica.save_status(dir_uuid, "Final ingest destination directory: #{tub}")
 
       FileUtils.mv(extract_path, tub)
-      save_status(dir_uuid, "Moved #{extract_path} to #{tub}")
+      Rubymatica.save_status(dir_uuid, "Moved #{extract_path} to #{tub}")
 
       if (extract_path.match(/^(.*)\//))
         extract_parent = $1;
         if (Dir.entries(extract_parent).length == 2)
           Dir.delete(extract_parent)
-          save_status(dir_uuid, "Delete empty dir #{extract_parent}")
+          Rubymatica.save_status(dir_uuid, "Delete empty dir #{extract_parent}")
         end
       end
 
@@ -1253,7 +1352,7 @@ module Rmatic
         # with the rest of the extract code.
 
         `#{Mv_exe} --backup=t #{extract_orig} #{Archive_path}`
-        save_status(dir_uuid, "Moved original  #{extract_orig} to #{Archive_path}")
+        Rubymatica.save_status(dir_uuid, "Moved original  #{extract_orig} to #{Archive_path}")
       end
       return base_name,dir_uuid, my_ig, tub, igl_dest, pv_dir, md_dir, ac_dir, extract_flag
     end # end reproc_false
@@ -1265,7 +1364,7 @@ module Rmatic
     def reproc_true(file)
       full_path = file
       if (! File.exists?(full_path))
-        # save_status(dir_uuid, "Can't reprocess, #{full_path} does not exist.")
+        # Rubymatica.save_status(dir_uuid, "Can't reprocess, #{full_path} does not exist.")
         print "Can't reprocess, #{full_path} does not exist.\n";
         exit
       end
@@ -1281,7 +1380,7 @@ module Rmatic
       base_name = my_ig.read_meta("ingest_name")
       tub = "#{Dest}/#{dir_uuid}/#{Accession_dir}"
       
-      save_status(dir_uuid, "Reprocessing #{Accession_dir} uuid: #{dir_uuid}")
+      Rubymatica.save_status(dir_uuid, "Reprocessing #{Accession_dir} uuid: #{dir_uuid}")
       
       igl_dest = "#{Dest}/#{dir_uuid}/#{Ig_logs}"
       pv_dir = "#{Dest}/#{dir_uuid}/#{Pv}"
@@ -1361,7 +1460,7 @@ module Rmatic
       # folder privs isn't necessary for us.
       
       create_dublin_core("#{md_dir}/#{Dcx}", dir_uuid)
-      save_status(dir_uuid, "Dublin core done")
+      Rubymatica.save_status(dir_uuid, "Dublin core done")
       
       # If we have not already extracted files at the beginning of ingest,
       # then extract tar zip rar, etc. (directory_to_scan_for_archives,
@@ -1370,19 +1469,19 @@ module Rmatic
       # easy_extract.
 
       if (! extract_flag)
-        save_status(dir_uuid, "Archive extract started...")
+        Rubymatica.save_status(dir_uuid, "Archive extract started...")
         easy_extract(tub, igl_dest, dir_uuid)
-        save_status(dir_uuid, "Archive extract done")
+        Rubymatica.save_status(dir_uuid, "Archive extract done")
       end
 
-      save_status(dir_uuid, "Detox started...")
+      Rubymatica.save_status(dir_uuid, "Detox started...")
 
       # (working_path, log_full_name, brief_log_full_name)
 
       run_detox(tub, "#{igl_dest}/#{Fclean}", "#{igl_dest}/#{Fclean_brief}")
 
-      save_status(dir_uuid, "Wrote #{igl_dest}/#{Fclean} and #{igl_dest}/#{Fclean_brief}")
-      save_status(dir_uuid, "Detox done")
+      Rubymatica.save_status(dir_uuid, "Wrote #{igl_dest}/#{Fclean} and #{igl_dest}/#{Fclean_brief}")
+      Rubymatica.save_status(dir_uuid, "Detox done")
 
       # What is this? I think it might be the base name of this
       # ingest. Are we using it?
@@ -1398,11 +1497,11 @@ module Rmatic
       # false is we aren't testing so run everything.
 
       skip_clamav = true;
-      save_status(dir_uuid, "Antivirus started...")
+      Rubymatica.save_status(dir_uuid, "Antivirus started...")
       
       Rubymatica.traverse(tub, false).each { |file|
         if (File.file?(file))
-          save_status(dir_uuid, "#{file} ...")
+          Rubymatica.save_status(dir_uuid, "#{file} ...")
           if (! skip_clamav)
             cs_args = "--stdout --quiet --move=#{possible_virus} #{file}"
             `#{Clamscan_exe} cs_args  >>  #{igl_dest}/#{Vscan} 2>> #{igl_dest}/#{Vwarn}`
@@ -1410,7 +1509,7 @@ module Rmatic
         end
       }
 
-      save_status(dir_uuid, "AV done")
+      Rubymatica.save_status(dir_uuid, "AV done")
 
       # start_dir (where the files are),
       # dest_dir (where the checksum output goes),
@@ -1418,26 +1517,26 @@ module Rmatic
       # If a checksum already exists, it won't create a new one.
 
       cs_full = md5_deep(tub, igl_dest, "#{md_dir}/#{Csn}")
-      save_status(dir_uuid, "Generate md5 done")
+      Rubymatica.save_status(dir_uuid, "Generate md5 done")
 
       # Check the checksums. I'm guessing args are "origin", "checksum
       # file", "process_sip_check.log"
 
-      save_status(dir_uuid,"Check md5 checksum stared...")
+      Rubymatica.save_status(dir_uuid,"Check md5 checksum stared...")
       check_md5(tub, cs_full, "#{igl_dest}")
-      save_status(dir_uuid, "Check md5 done")
+      Rubymatica.save_status(dir_uuid, "Check md5 done")
 
       # Run FITS for file id, and assign file uuids. While we're
       # crawling through the file list, write the uuid to file log
       # file that is used later to deconvolute the file uuids.
 
-      save_status(dir_uuid, "FITS started...")
+      Rubymatica.save_status(dir_uuid, "FITS started...")
 
       skip_fits = false;
       uuid_log_fd = File.open("#{igl_dest}/#{Uuid_log}", "w");
       Rubymatica.traverse(tub, false).each { |file|
         if (File.file?(file) and File.exists?(file))
-          save_status(dir_uuid, "#{file} ...")
+          Rubymatica.save_status(dir_uuid, "#{file} ...")
           file_uuid = `#{Uuid_exe} -v 4`.chomp
           uuid_log_fd.print "#{file_uuid}\t#{file}\n"
           if (! skip_fits)
@@ -1469,8 +1568,8 @@ module Rmatic
       fp_log_fd.print "fits processing complete\n"
       fp_log_fd.close()
 
-      save_status(dir_uuid, "Created #{igl_dest}/fits.db")
-      save_status(dir_uuid, "FITS done")
+      Rubymatica.save_status(dir_uuid, "Created #{igl_dest}/fits.db")
+      Rubymatica.save_status(dir_uuid, "FITS done")
 
       # What happens in fileUUID.py? Maybe it reads the clean file
       # name and dir_uuid from somewhere and logs it. Check this.
@@ -1478,113 +1577,16 @@ module Rmatic
       # The original AM code takes the ingest_Logs/$DIR_UUID as an
       # arg. Probably unnecessary for us.
 
-      save_status(dir_uuid, "Create METS started...")
+      Rubymatica.save_status(dir_uuid, "Create METS started...")
 
       mets_xml = Create_mets.new(dir_uuid, base_name)
       mets_f = "#{md_dir}/METS.xml"
       File.open(mets_f, "w") { |fd|
         fd.print mets_xml.to_xml;
       }
-      save_status(dir_uuid, "Wrote #{mets_f}")
-      save_status(dir_uuid, "METS create done")
-      save_status(dir_uuid, "Processing complete")
+      Rubymatica.save_status(dir_uuid, "Wrote #{mets_f}")
+      Rubymatica.save_status(dir_uuid, "METS create done")
+      Rubymatica.save_status(dir_uuid, "Processing complete")
     end # end of process_one()
-
-
-    # Given a uuid, create a bagit bag. mdo is a message dohicky object.
-
-    def create_bag(dir_uuid, mdo)
-
-      uuid = File.basename(dir_uuid);
-      save_status(uuid, "Starting bag creation");
-
-      # Several of the commands here are backticked Linux commands because
-      # pure Ruby is either awkward or outright buggy. 
-
-      # If a bag dir already exists, then exit. File.exist? works for dirs
-      # too. There is no Dir.exist?.
-      
-      msg_str = ""
-      bag_dir = File.join(dir_uuid, "bag")
-      bag_file = File.join(dir_uuid, Bagit_file)
-
-      if (File.exist?(bag_dir))
-        FileUtils.rm_rf(bag_dir)
-        msg_str = "Removed existing bag dir.\n"
-      end
-      
-      if (File.exist?(bag_file))
-        FileUtils.rm_f(bag_file)
-        msg_str.concat("Removed existing bag file.\n")
-      end
-      
-      if (! msg_str.empty?)
-        save_status(uuid, msg_str);
-      end
-
-      if (! mdo.to_s.empty?)
-        mdo.set_message(msg_str, true)
-      else
-        print msg_str
-      end
-
-      # Save the list of top level files and dirs before the bag dir is
-      # created. Use the pure Ruby method of getting the top level list of
-      # files and directories.
-
-      top_level_list = Dir[File.join(dir_uuid, '*')]
-
-      # New bagit object also creates ./bag and /bag/data
-
-      bag = BagIt::Bag.new(bag_dir) # "#{dir_uuid}/bag"
-      save_status(uuid, "New bag object created");
-      hash = bag.bag_info()
-      hash["Internal-Sender-Identifier"] = dir_uuid
-
-      bag.write_bag_info(hash)
-
-      # Copy files from dir_uuid into bag/data by each()ing through the
-      # list. Don't forget to chomp the copy_me origins because they came
-      # from a backticked command. FileUtils.cp_r has a bug, so we can't
-      # use it.
-
-      top_level_list.each { |copy_me|
-        copy_me.chomp!
-        `#{Cp_exe} -a #{copy_me} #{bag_dir}/data`
-      }
-
-      # bag_files are all files in data_dir, recursive
-      # tag_files are only files in the top level bag dir.
-
-      bag.manifest!
-      bag.tagmanifest!
-
-      # Create the bagit file in the main directory. Need to use -r to
-      # recursively add files. chdir to the Dest directory, so that the
-      # paths in the zip file will begin with the uuid of the
-      # ingest. File.basename() gets the last component of a path, even if
-      # that component is a directory and not a file.
-      
-      Dir.chdir(dir_uuid)
-
-      rel_path = File.basename(dir_uuid)
-
-      `#{Zip_exe} -r #{Bagit_file} bag`
-      save_status(uuid, "Zipping bag directory");
-
-      msg_final = "#{dir_uuid}/#{Bagit_file} created."
-      mdo.set_message(msg_final, true)
-      save_status(uuid, msg_final)
-      save_status(uuid, "Bag created")
-
-      # We can't easily use pure Ruby to delete because Dir[] doesn't have a
-      # depth-first option. 'find' would work, but since we're deleting
-      # everything in the bag directory tree, we might as well use
-      # /bin/rm.
-
-      # nov 23 2010 Change to just use .rm_rf
-
-      FileUtils.rm_rf(bag_dir)
-    end 
   end # class Rubymatica
 end 
