@@ -14,8 +14,10 @@ Clamscan_exe = "/usr/bin/clamscan"
 Csn = "md5checksum.txt" # memnonic: check sum name
 # Some info about an ingest. Created automatically.
 Db_name = "info.db"
+
 # Empty DC file copied into an ingest.
 Dcx = "dublin_core.xml"
+
 # You must create this directory as part of the Rubymatica install.
 Dest = "/home/#{ENV['USER']}/dest"
 Detox_exe = "/usr/local/bin/detox"

@@ -4,9 +4,11 @@ $LOAD_PATH.push(":#{File.expand_path(File.dirname(__FILE__))}")
 
 # $:.concat(":",Script_path)
 
-require 'rubymatica.rb'
+require 'rubymatica'
 require 'optparse'
 require 'sqlite3'
+
+include Rmatic
 
 redo_dir = ""
 arg = ""
@@ -34,10 +36,10 @@ op.parse!
 
 if (arg == "dd")
   if (! redo_dir.empty? and File.exists?("#{Dest}/#{redo_dir}"))
-    process("#{Dest}/#{redo_dir}", true)
+    Rubymatica.new("#{Dest}/#{redo_dir}", true)
   end
 elsif (arg == "in")
-  process(ingest_dir, false)
+  Rubymatica.new(ingest_dir, false)
 else
-  process("", false)
+  Rubymatica.new("", false)
 end

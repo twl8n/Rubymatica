@@ -8,12 +8,11 @@ require 'sqlite3'
 # server. Nither load nor require work to load the external file
 # automatically.
 
-require 'rubymatica.rb'
-
-# Used by some test/example code. Not required by Rubymatica.
+require 'rubymatica'
+include Rmatic
 
 class Recs   
-
+  # Used by test/example code below. Not required by Rubymatica.
   def initialize
     @recs = []
   end
@@ -55,6 +54,7 @@ class HelloWorldController < ApplicationController
   # wouldn't need the path (but we'd have other admin overhead).
 
   def my_init
+    # see rubymatica.rb for class def 
     @mdo = Msg_dohicky.new(get_remote_addr, Script_path)
   end
 
@@ -89,7 +89,8 @@ class HelloWorldController < ApplicationController
     db = SQLite3::Database.new(pfn)
     db.transaction
     stmt = db.prepare("select * from puid_info order by format_id")
-    ps = Proc_sql.new();
+    # see rubymatica.rb for class def 
+    ps = Proc_sql.new()
     stmt.execute() { |rs|
       ps.chew(rs)
     }
@@ -409,7 +410,7 @@ class HelloWorldController < ApplicationController
 
   def full_status
     uuid = params[:uuid]
-    loh = get_status(uuid)
+    loh = Rubymatica.get_status(uuid)
     @all_text = "#{uuid}\n"
     loh.each { |hr|
       @all_text.concat("\n#{hr['date']} #{hr['msg']}")
@@ -509,15 +510,10 @@ class HelloWorldController < ApplicationController
     if (! pid)
       
       # Forking causes WEBrick to fork, and the child keeps
-      # listening. WEBrick is so wrong, but it is a pita to get this
-      # working with Apache, so I'm looking for another solution, thus
-      # the exec() below. Seems to work better, but there could be
-      # race conditions.
-
-      # # Child process exits when it is done. We do not want the child
-      # # to make any output.
-      # process_one(dir, false)
-      # exit(0)
+      # listening. WEBrick is so wrong, but I suspect that forking
+      # inside mod_passenger also causes part (or all) of the http
+      # server to fork. The exec() below seems to work better, but
+      # there could be race conditions.
 
       # We need to run a script that is two dirs up from where we are
       # when running Rails. Find the absolute path and use it in the
@@ -527,13 +523,15 @@ class HelloWorldController < ApplicationController
       # our env. So we have to send the port number over on the
       # command line. The port is used for the error log file name.
 
-      # Nov 9 2010 This doesn't work. I tried it in irb and it returns
-      # "." instead use a constant.
+      # Rails controllers are two dirs down from the app top level
+      # directory. Expanding a path that has "/../../" concatenated
+      # seems to work, and seems portable in that is also works with
+      # bash ls and pwd.
 
-      # pfn = File.dirname(File.dirname(File.dirname(__FILE__)))
+      pfn = File.expand_path(File.dirname(File.expand_path(__FILE__)) + "/../../")
       
-      
-      Process.exec("#{Script_path}/process_sip.rb -i #{dir} -p #{request.server_port}")
+      # Process.exec("#{Script_path}/process_sip.rb -i #{dir} -p #{request.server_port}")
+      Process.exec("#{pfn}/process_sip.rb -i #{dir} -p #{request.server_port}")
     else
       Process.detach(pid)
     end
@@ -618,7 +616,7 @@ class HelloWorldController < ApplicationController
 
     # See rubymatica.rb. Returns a list of hash.
 
-    @loh = get_droid(uuid)
+    @loh = Rubymatica.get_droid(uuid)
 
     # Build a new hash where the keys are rmatic_category from the db
     # and the value is the count of files in that category. Read the
@@ -676,6 +674,7 @@ class HelloWorldController < ApplicationController
   def update_taper
     uuid = params[:uuid]
     file = "#{Dest}/#{uuid}/#{Meta}/#{Taper_file}"
+    # see rubymatica.rb for class def 
     ingest_name = Ingest.new(uuid).read_meta("ingest_name")
 
     if (! File.exists?(file))
@@ -890,6 +889,7 @@ class HelloWorldController < ApplicationController
 
     def iname(foo)
       bname = File.basename(foo)
+      # see rubymatica.rb for class def 
       return Ingest.new(bname).read_meta("ingest_name").to_s.downcase
     end
 
@@ -905,7 +905,7 @@ class HelloWorldController < ApplicationController
       rh[:name] = File.basename(file)
       rh[:dirs] = ""
       rh[:mets] = "METS.xml"
-      rh[:stat] = get_status(File.basename(file))[-1]['msg']
+      rh[:stat] = Rubymatica.get_status(File.basename(file))[-1]['msg']
       rh[:short] = rh[:stat]
       if (rh[:short].length > 20)
         rh[:short] = "#{rh[:short][0..20]}..."
@@ -917,6 +917,7 @@ class HelloWorldController < ApplicationController
         rh[:bgcolor] = bgcolor
       end
 
+      # see rubymatica.rb for class def 
       my_ig = Ingest.new(rh[:name])
 
       # Ugh. Feb 14 2011. I'm guessing this is used for the name of
@@ -943,6 +944,7 @@ class HelloWorldController < ApplicationController
     end
 
     db = SQLite3::Database.new("/home/twl8n/aims_1/am_ruby/test.db");
+    # see class def at the top of this file.
     @recs = Recs.new()
     @row_class = ""
     columns = nil
