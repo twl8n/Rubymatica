@@ -21,6 +21,9 @@ module Rmatic
   STDOUT.sync = true
 
   class Create_bag
+    # Create a bagit bag. This class has only one method initialize(),
+    # and returns nothing meaningful. I suppose it could be a class
+    # method of Rubymatica as are the other utilities.
 
     def initialize(dir_uuid, mdo)
       # Given a uuid, create a bagit bag. mdo is a message dohicky object.
@@ -115,6 +118,7 @@ module Rmatic
       # nov 23 2010 Change to just use .rm_rf
 
       FileUtils.rm_rf(bag_dir)
+      return true
     end 
   end
 
@@ -856,6 +860,16 @@ module Rmatic
       $1
     end
 
+    def detox_test(file)
+      d_out = `#{Detox_exe} -nv #{Escape.shell_command(file)} 2>&1`
+      return d_out;
+    end
+    
+    def detox_do(file)
+      d_out = `#{Detox_exe} -v #{Escape.shell_command(file)} 2>&1`
+      return d_out
+    end
+
     def run_detox(working_path, log_full_name, brief_log_full_name)
       # Helper method to run detox.  Long term we need to parse the output
       # of detox and save the original and final names in a db. We probably
@@ -863,16 +877,6 @@ module Rmatic
 
       # This wasn the original, simple command:
       #  `#{Detox_exe} -rv #{tub} >> #{igl_dest}/#{Fclean} 2>&1`
-      
-      def detox_test(file)
-        d_out = `#{Detox_exe} -nv #{Escape.shell_command(file)} 2>&1`
-        return d_out;
-      end
-
-      def detox_do(file)
-        d_out = `#{Detox_exe} -v #{Escape.shell_command(file)} 2>&1`
-        return d_out
-      end
 
       detox_log_text = "";
       detox_brief = ""
@@ -1191,7 +1195,9 @@ module Rmatic
       pv_dir = "#{Dest}/#{dir_uuid}/#{Pv}"
       md_dir = "#{Dest}/#{dir_uuid}/#{Meta}"
       ac_dir = "#{Dest}/#{dir_uuid}/#{Accession_dir}"
-      @mdd = md_dir;
+
+      # What did this variable do?
+      # @mdd = md_dir;
       
       # Create meta data directory
       FileUtils.mkdir_p(md_dir);
@@ -1427,9 +1433,9 @@ module Rmatic
       # a log file.
 
       log_file = File.expand_path(Script_path) + "/" +  err_name()
-      $stdout.reopen(log_file, "a")
-      $stdout.sync = true
-      $stderr.reopen($stdout)
+      # $stdout.reopen(log_file, "a")
+      # $stdout.sync = true
+      # $stderr.reopen($stdout)
 
       extract_flag = false
 
