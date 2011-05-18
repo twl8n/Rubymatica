@@ -8,9 +8,23 @@ class HelloWorldControllerTest < ActionController::TestCase
   test "Archive_path" do
     assert(File.exists?(Archive_path), "Missing path: #{Archive_path}")
   end
-  # test "" do
-  #   assert(File.exists?(), "Missing path: #{}")
+
+  # test "xx" do
+  #   assert(File.exists?(xx), "Missing path: #{xx}")
   # end
+
+   test "Puid_db" do
+    assert(File.exists?("#{RAILS_ROOT}/#{Puid_db}"),
+           "Missing PUID database: #{RAILS_ROOT}/#{Puid_db}")
+   end
+
+  test "Rmatic_constants" do
+    assert(File.exists?("#{RAILS_ROOT}/rmatic_constants.rb"), "Missing file: rmatic_constants.rb")
+  end
+
+  test "Dest" do
+    assert(File.exists?(Dest), "Missing path: #{Dest}")
+  end
   test "Zip_exe" do
     assert(File.exists?(Zip_exe), "Missing path: #{Zip_exe}")
   end
