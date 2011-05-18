@@ -165,6 +165,17 @@ cat schema_puid.sql | sqlite3 puid.db
 cat puid_list.txt | sqlite3 puid.db
 mkdir tmp
 
+Note that config/environment.rb has been modified from the
+default. The hello_world_controller.rb works fine with a simple
+"require 'rubymatica'" at the top of the file, but the Rails tests
+fail due to being in a different path. Oddly the Rails root is not in
+the default path. Add it:
+
+  config.load_paths += %W( #{RAILS_ROOT}/ )
+
+cd test
+ruby functional/hello_world_controller_test.rb 
+
 
 
 How to install and run with Ruby Enterprise and CentOS 5
