@@ -1433,9 +1433,9 @@ module Rmatic
       # a log file.
 
       log_file = File.expand_path(Script_path) + "/" +  err_name()
-      # $stdout.reopen(log_file, "a")
-      # $stdout.sync = true
-      # $stderr.reopen($stdout)
+      $stdout.reopen(log_file, "a")
+      $stdout.sync = true
+      $stderr.reopen($stdout)
 
       extract_flag = false
 
@@ -1494,23 +1494,72 @@ module Rmatic
 
       clean_name = `#{Ls_exe} #{tub}/`.chomp
 
-      # Scan for viruses. --stdout sends any non-libclamav output to
-      # stdout. The libclamav output goes to stderr and we ignore
-      # it. --quiet stops output except error messages. --move moves
-      # potentially infected files to a directory.
-      
-      # true is we are in testing mode so don't run slow commands.
-      # false is we aren't testing so run everything.
+      # Scan for viruses. The summary is only printed once. Note that
+      # infected files are moved to a temp directory by clamscan, then
+      # Ruby code creates an appropriate relative path inside the
+      # possible_virus directory, and moves the infected file
+      # there. This prevents file name conflicts and insures that we
+      # can always relate an infected file back to the original
+      # directory location. Note also that tar, rar, and zip files
+      # containing infected files will also be moved. We assume that
+      # they have been un-archived by the time clamscan sees them, but
+      # it could be confusing to be "missing" an archive file.
 
-      skip_clamav = true;
+      # Perhaps ideally, we would *not* allow clamscan to move files,
+      # but instead feed it a directory tree, and parse the output,
+      # moving the infected files ourselves. Consider this as a future
+      # feature.
+
+      # --stdout sends any non-libclamav output to stdout. The
+      # libclamav output goes to stderr and should be logged to
+      # Vwarn. The option --move moves potentially infected files to a
+      # directory. The option --quiet stops output except error
+      # messages, and therefore --quiet is bad when you want to have a
+      # record of what was done so I recommend not using
+      # --quiet. Historically, --quiet was used during development,
+      # but since it was quiet, the tests were not too meaningful.
+      
+      # Create a unique dir name via uuid. Use this as a temp staging
+      # area. clamscan can't create dirs and we need the full original
+      # path name (relative to the root dir of the ingest).
+      
+      pv_uuid = `#{Uuid_exe} -v 4`.chomp;
+      pv_temp = "#{pv_dir}/#{pv_uuid}"
+      FileUtils.mkdir_p(pv_temp)
+
       Rubymatica.save_status(dir_uuid, "Antivirus started...")
       
+      # First time through, display the summary, so we know version number, etc.
+
+      no_summary = ""
       Rubymatica.traverse(tub, false).each { |file|
         if (File.file?(file))
+          fn = File.basename(file)
           Rubymatica.save_status(dir_uuid, "#{file} ...")
-          if (! skip_clamav)
-            cs_args = "--stdout --quiet --move=#{possible_virus} #{file}"
-            `#{Clamscan_exe} cs_args  >>  #{igl_dest}/#{Vscan} 2>> #{igl_dest}/#{Vwarn}`
+          cs_args = "--stdout #{no_summary} --move=#{pv_temp} #{file}"
+          `#{Clamscan_exe} #{cs_args}  >>  #{igl_dest}/#{Vscan} 2>> #{igl_dest}/#{Vwarn}`
+          
+          if (no_summary.empty?)
+            log_fd = File.open("#{igl_dest}/#{Vscan}", "a")
+            log_fd.print("(Summary message above does not reflect accurate counts of files.)\n")
+            log_fd.close()
+          end
+          no_summary = "--no-summary"
+
+          # Check for our file in the possible_virus temp staging
+          # area. If it exists, build a path based on the original
+          # name, and move the file from the pv temp dir to the final
+          # full-ingest-path pv dir. And write to the log file.
+
+          pv_fn = "#{pv_temp}/#{fn}"
+          if File.exists?(pv_fn)
+            rel_path = file.match(/#{ac_dir}\/(.*)/)[1]
+            pv_dest = File.dirname("#{pv_dir}/#{rel_path}")
+            FileUtils.mkdir_p(pv_dest)
+            FileUtils.mv(pv_fn, pv_dest)
+            log_fd = File.open("#{igl_dest}/#{Vscan}", "a")
+            log_fd.print("Moved (#{fn}): #{pv_fn} to #{pv_dest}/#{fn}\n")
+            log_fd.close()
           end
         end
       }

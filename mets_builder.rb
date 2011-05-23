@@ -136,7 +136,7 @@ builder = Nokogiri::XML::Builder.new {
           file("xmlns:xlink" => "http://www.w3.org/1999/xlink",
                :ID => "file-#{item}-#{file_uuid}",
                :ADMID => "digiprov-#{item}\#{file_uuid}")
-          Flocat("xlink:href" => "#{path}/${file_name}",
+          Flocat("xlink:href" => "#{path}/#{file_name}",
                  :locType => "other",
                  :otherLocType => "system")
         end
@@ -152,7 +152,7 @@ builder = Nokogiri::XML::Builder.new {
           file("xmlns:xlink" => "http://www.w3.org/1999/xlink",
                :ID => "file-#{item}-#{file_uuid}",
                :ADMID => "digiprov-#{item}\#{file_uuid}")
-          Flocat("xlink:href" => "#{path}/${file_name}",
+          Flocat("xlink:href" => "#{path}/#{file_name}",
                  :locType => "other",
                  :otherLocType => "system")
         end

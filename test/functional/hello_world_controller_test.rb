@@ -12,11 +12,11 @@ class HelloWorldControllerTest < ActionController::TestCase
   # test "xx" do
   #   assert(File.exists?(xx), "Missing path: #{xx}")
   # end
-
-   test "Puid_db" do
+  
+  test "Puid_db" do
     assert(File.exists?("#{RAILS_ROOT}/#{Puid_db}"),
            "Missing PUID database: #{RAILS_ROOT}/#{Puid_db}")
-   end
+  end
 
   test "Rmatic_constants" do
     assert(File.exists?("#{RAILS_ROOT}/rmatic_constants.rb"), "Missing file: rmatic_constants.rb")

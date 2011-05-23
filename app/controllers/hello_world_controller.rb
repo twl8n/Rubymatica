@@ -956,7 +956,7 @@ class HelloWorldController < ApplicationController
         # process row by creating a hash
         rh = Hash.new
         columns.each_index { |xx|
-          # @output = @output + "key #{columns[xx]} value ${row[xx]}<br>\n";
+          # @output = @output + "key #{columns[xx]} value #{row[xx]}<br>\n";
           rh[columns[xx]] = row[xx]
         }
         # @output = @output + "adding #{rh.inspect}<br>\n";
