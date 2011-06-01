@@ -4,6 +4,7 @@ Table of contents
 -----------------
 Introduction
 Install required packages
+Testing the install
 How to install and run with Ruby Enterprise and CentOS 5
 Troubleshooting
 How to install Bagit
@@ -12,6 +13,8 @@ How to add a new controller
 List of files
 Testing TAPER integration with Rubymatica
 How to install Tufts TAPER SABT
+Potential errors while running TAPER
+
 
 Introduction
 ------------
@@ -173,8 +176,14 @@ the default path. Add it:
 
   config.load_paths += %W( #{RAILS_ROOT}/ )
 
+
+
+Testing the install
+-------------------
+
 cd test
 ruby functional/hello_world_controller_test.rb 
+
 
 
 
@@ -1240,3 +1249,30 @@ total 132
 -rw-r--r-- 1 mst3k users  6653 2011-04-07 15:53 site_header_top.jpg
 -rw-r--r-- 1 mst3k users  7110 2011-04-07 15:53 tufts_logo_226x78.jpg
 >
+
+
+Potential errors while running TAPER
+------------------------------------
+
+File permissions can be an issue with TAPER due to the needs of
+Catalyst. I found it necessary to chmod the ./run/ directory tree.
+
+cd ~/public_html/TAPER
+chmod -R go+w ./run
+
+Here is the error text from /etc/httpd/error_log:
+
+[Tue May 31 09:43:13 2011] [warn] mod_fcgid: stderr: [error] Caught exception in engine "mkdir run/session/3: Permission denied at /usr/lib/perl5/site_perl/5.8.8/Cache/FileBackend.pm line 222"
+[Tue May 31 09:43:13 2011] [error] [client 127.0.0.1] Premature end of script headers: taper_fastcgi.pl, referer: http://aims.lib.virginia.edu/taper/auth/login
+
+
+The MySQL daemon must also be runnnig for TAPER to work. I'm not clear
+if httpd and mysqld have to be restarted in a particular order. It
+probably makes sense to start mysqld first, then httpd so that if (or
+when) TAPER requests a connection to the database, the database is
+already running.
+
+
+[Tue May 31 09:40:18 2011] [warn] mod_fcgid: stderr: [error] DBIx::Class::ResultSet::search(): DBI Connection failed: DBI connect('t
+aper','taper',...) failed: Can't connect to local MySQL server through socket '/var/lib/mysql/mysql.sock' (111) at /usr/lib/perl5/si
+te_perl/5.8.8/DBIx/Class/Storage/DBI.pm line 1262

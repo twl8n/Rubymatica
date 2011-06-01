@@ -26,6 +26,19 @@ Rails::Initializer.run do |config|
   # config.gem "sqlite3-ruby", :lib => "sqlite3"
   # config.gem "aws-s3", :lib => "aws/s3"
 
+  # rubygems, find, and fileutils are modules, not gems.
+
+  # Version requirements are unknown, and since I expect all gems to
+  # coexist peacefully, I haven't required specific versions.
+
+  # Odd. This doesn't work.
+  # config.gem "sqlite3-ruby"
+
+  config.gem "nokogiri"
+  config.gem "bagit"
+  config.gem "escape"
+  # config.gem "test_exists_gem"
+
   # Only load the plugins named here, in the order given (default is alphabetical).
   # :all can be used as a placeholder for all plugins not explicitly named
   # config.plugins = [ :exception_notification, :ssl_requirement, :all ]
