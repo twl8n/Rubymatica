@@ -182,7 +182,14 @@ Testing the install
 -------------------
 
 cd test
-ruby functional/hello_world_controller_test.rb 
+./functional/hello_world_controller_test.rb 
+
+or 
+
+/usr/bin/env/ ruby functional/hello_world_controller_test.rb 
+
+Use /usr/bin/env so that you get the correct ruby interpreter. You
+must run the tests from the ./test/ directory.
 
 
 
