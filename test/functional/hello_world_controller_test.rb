@@ -8,6 +8,12 @@ require 'sqlite3'
 
 class HelloWorldControllerTest < ActionController::TestCase
   
+  # Some tests are indirect via environment.rb:
+  # config.gem "nokogiri"
+  # config.gem "bagit"
+  # config.gem "escape"
+  # config.gem "validatable"
+
   # Kind of a roundabout way to test for existence of a module. At
   # least it works. I suspect that if these modules didn't exist, or
   # did not load, we would get an error from the require at the top of

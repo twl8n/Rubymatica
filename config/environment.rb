@@ -37,6 +37,7 @@ Rails::Initializer.run do |config|
   config.gem "nokogiri"
   config.gem "bagit"
   config.gem "escape"
+  config.gem "validatable"
   # config.gem "test_exists_gem"
 
   # Only load the plugins named here, in the order given (default is alphabetical).
