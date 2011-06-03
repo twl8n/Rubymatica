@@ -47,6 +47,17 @@ Install required packages
 -------------------------
 
 
+You can use the "git" command to check out Rubymatica from github, and
+you can use it to retrieve updates as well:
+
+# initial checkout
+git clone http://github.com/twl8n/Rubymatica.git
+
+# get updates
+git pull
+
+
+
 yum packages for:
 clamscan (clamav), uuid, sqlite3, xsltproc, zip, unzip,
 
@@ -156,7 +167,7 @@ make install
 # it anything you like.
 
 cd /home/mst3k
-git clone git@github.com:twl8n/Rubymatica.git am_ruby
+git clone git@github.com:mst3k/Rubymatica.git am_ruby
 cd am_ruby/
 cp -a db_dist db
 cp rmatic_constants.rb.dist rmatic_constants.rb
@@ -1021,6 +1032,35 @@ __PACKAGE__->config(
     </realms>
 </authentication>
 
+
+You should (must?) also set reasonable values for the other
+configuration values. In the examples below, the admin is
+mst3k@virginia.edu and the taper_run directory is in the admin's home
+directory.
+
+# App-wide email-related config
+dca_staff_email mst3k@virginia.edu
+
+from_name Submission Agreement Builder Tool
+#from_address jmac@jmac.org
+from_address mst3k@virginia.edu
+
+# Outgoing email config
+email SMTP
+email cms.mail.virginia.edu
+
+rsa_staging_directory /home/mst3k/taper_run/staging
+ssa_directory /home/mst3k/taper_run/ssa
+
+
+You must also create the taper_run directory and give it permissions
+so that TAPER/fcgi/Catalyst will be able to mkdir and create files.
+
+> cd /home/mst3k/taper_run/
+> chmod go+w .
+
+
+
 # quick command line test for TAPER. (No. Catalyst apps require
 # mod_perl or mod_fastcgi.) taper w/apache or at command line.
 
@@ -1283,3 +1323,16 @@ already running.
 [Tue May 31 09:40:18 2011] [warn] mod_fcgid: stderr: [error] DBIx::Class::ResultSet::search(): DBI Connection failed: DBI connect('t
 aper','taper',...) failed: Can't connect to local MySQL server through socket '/var/lib/mysql/mysql.sock' (111) at /usr/lib/perl5/si
 te_perl/5.8.8/DBIx/Class/Storage/DBI.pm line 1262
+
+
+
+An error when creating a SSA or RSA is probably due to
+permissions. See the Apache httpd logs and change directory permission
+as necessary. The warning about printing to a closed filehandle
+doesn't seem to effect anything.
+
+
+[Fri Jun 03 14:08:38 2011] [warn] mod_fcgid: stderr: printf() on closed filehandle OUT at /home/mst3k/public_html/TAPER/script/../lib/TAPER/Controller/Dca.pm line 28.
+[Fri Jun 03 14:08:38 2011] [warn] mod_fcgid: stderr: [error] Caught exception in TAPER::Controller::Dca::Ssa->create "mkdir /home/mst3k/taper_run/ssa: Permission denied at /home/mst3k/public_html/TAPER/script/../lib/TAPER/Model/SSA.pm line 64"
+
+
