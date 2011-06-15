@@ -27,6 +27,22 @@ class HelloWorldControllerTest < ActionController::TestCase
   # recommend switching to RSpec. We brute force initialization by
   # just instantiating T_help where necssary. 
 
+  # http://stackoverflow.com/questions/1032114/check-for-ruby-gem-availability
+
+  # begin
+  #   gem "somegem"
+  #   # with requirements
+  #   gem "somegem", ">=2.0"
+  # rescue GEM::LoadError
+  #   # not installed
+  # end
+
+  # Gem.available?('somegem')
+  # # You can use regex expressions too. Handy if I want to allow 'rcov'
+  # # and GitHub variants like 'relevance-rcov':
+  # Gem.available?(/-?rcov$/)
+
+
   # Some tests are (also) indirect via environment.rb:
   # config.gem "nokogiri"
   # config.gem "bagit"
