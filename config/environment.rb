@@ -34,6 +34,8 @@ Rails::Initializer.run do |config|
   # Odd. This doesn't work.
   # config.gem "sqlite3-ruby"
 
+  # These are also tested in hello_world_controller_test.rb, so these
+  # lines could be commented out.  Or they can stay.
   config.gem "nokogiri"
   config.gem "bagit"
   config.gem "escape"

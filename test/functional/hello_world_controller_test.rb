@@ -1,20 +1,73 @@
 #!/usr/bin/env ruby
 
 require 'test_helper'
-require 'rubygems'
+@top_2 = require 'rubygems'
 require 'sqlite3'
-
 
 # http://guides.rubyonrails.org/testing.html
 # http://en.wikibooks.org/wiki/Ruby_Programming/Unit_testing
 
-class HelloWorldControllerTest < ActionController::TestCase
+class T_help
   
-  # Some tests are indirect via environment.rb:
+  def initialize()
+    @rh = Hash.new()
+    $LOADED_FEATURES.each { |feat| 
+      @rh[feat] = 1
+    }
+  end
+
+  def check_feat(feat)
+    return @rh.has_key?(feat)
+  end
+end
+
+class HelloWorldControllerTest < ActionController::TestCase
+
+  # Apparently there is no :before or :all for TestCase so people
+  # recommend switching to RSpec. We brute force initialization by
+  # just instantiating T_help where necssary. 
+
+  # Some tests are (also) indirect via environment.rb:
   # config.gem "nokogiri"
   # config.gem "bagit"
   # config.gem "escape"
   # config.gem "validatable"
+
+  test "bagit" do
+    th = T_help.new()
+    assert(th.check_feat("bagit.rb"), "Required module bagit not loaded")
+  end
+
+  test "nokogiri" do
+    th = T_help.new()
+    assert(th.check_feat("nokogiri.rb"), "Required module nokogiri not loaded")
+  end
+
+  test "escape" do
+    th = T_help.new()
+    assert(th.check_feat("escape.rb"), "Required module escape not loaded")
+  end
+
+  test "validatable" do
+    th = T_help.new()
+    assert(th.check_feat("validatable.rb"), "Required module validatable not loaded")
+  end
+
+  # require returns true the first time a module is loaded. If the
+  # module has already been loaded, perhaps by a previous require,
+  # then false is returned. Try $LOADED_FEATURES instead.
+  if false
+    print "all_gems next. top_2: #{@top_2} (should be true) #{@top_2.class}\n"
+    test "all_gems" do 
+      ['bagit', 'nokogiri'].each { |test_gem|
+        print "Testing: #{test_gem}\n"
+        rg_result = require 'rubygems'
+        gem_result = require test_gem
+        print "rg_result: #{rg_result} test gem: #{gem_result} for #{test_gem}\n"
+        assert(gem_result, "Could not find gem: #{test_gem}")
+      }
+    end
+  end
 
   # Kind of a roundabout way to test for existence of a module. At
   # least it works. I suspect that if these modules didn't exist, or
@@ -28,24 +81,6 @@ class HelloWorldControllerTest < ActionController::TestCase
   test "sqlite" do 
     assert(SQLite3.is_a?(Module), "Required module sqlite3 not loaded")
   end
-
-  # Doesn't work.
-  # test "all_gems" do 
-  #   ['bagit', 'nokogiri'].each { |test_gem|
-  #     print "Testing: #{test_gem}\n"
-  #     res = require 'rubygems'
-  #     var = require test_gem
-  #     print "res: #{res} test var: #{var} for #{test_gem}\n"
-  #     assert(var, "Could not find gem: #{test_gem}")
-  #   }
-  # end
-
-  # Doesn't work.
-  # test "rubygems" do
-  #   # res = require 'rubygems'
-  #   res = Required::Module::const_get "rubygems"
-  #   assert(res, "Can't find rubygems")
-  # end
 
   test "Archive_path" do
     assert(File.exists?(Archive_path), "Missing path: #{Archive_path}")
