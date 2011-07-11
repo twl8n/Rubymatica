@@ -890,7 +890,7 @@ module Rmatic
       if new_file.gsub!(/[^A-Za-z0-9\.\-_\/]+/, '_')
         # Remove any multiple underscores
         new_file.gsub!(/_+/, '_')
-        print "nf: #{new_file} fi: #{file}\n"
+        # print "nf: #{new_file} fi: #{file}\n"
         if File.exists?(new_file)
           d_out.concat(sprintf("Cannot rename %s to %s: file already exists\n",
                                Escape.shell_command(file),
@@ -898,7 +898,6 @@ module Rmatic
         else
           if (! dry_run_flag)
             # Maybe we should check for success or errors here?
-            print "renaming: #{file} to #{new_file}\n"
             File.rename(file, new_file)
             path_changed = true
           end
@@ -1005,6 +1004,7 @@ module Rmatic
 
         # Only call detox_do() if the test had "->" indicating that detox
         # wants to change the name.
+
         
         if (d_out.match(/(.*)\s+\-\>\s+(.*)/))
           interim_fn = $1
@@ -1031,11 +1031,11 @@ module Rmatic
       
       # Write out the log files.
 
-      File.open(log_full_name, "wb") { |my_log|
+      File.open(log_full_name, "a+") { |my_log|
         my_log.write(detox_log_text)
       }
 
-      File.open(brief_log_full_name, "wb") { |my_log|
+      File.open(brief_log_full_name, "a+") { |my_log|
         my_log.write(detox_brief)
       }
       return path_changed
