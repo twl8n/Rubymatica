@@ -802,7 +802,7 @@ Standard part of Rails.
 
 We use static routes to make our pages load via a shorter
 path. Normally the URL would be
-http://hostname/hellow_world_controller/report but by using a static
+http://hostname/hello_world_controller/report but by using a static
 route for each page we can use shorter urls: http://hostname/report
 
 --

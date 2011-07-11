@@ -872,14 +872,65 @@ module Rmatic
       $1
     end
 
+    def detox_dir(file, dry_run_flag)
+      # Test a directory name. We lazily escape everything. detox only
+      # escapes particularily dangerouse chars such as &, but does not
+      # escape " " (space). Curious.
+      path_changed = false
+      d_out = "Scanning: #{Escape.shell_command(file)}\n"
+      new_file = String.new(file)
+
+      # , ; : = + % @ may be ok, but they are just too weird, we
+      # won't allow them.  Other non-allowed chars actually cause
+      # problems in various scenarios. Allow / because these are directories.
+
+      # Make our output string exactly match that of detox so calling
+      # code can parse our results.
+
+      if new_file.gsub!(/[^A-Za-z0-9\.\-_\/]+/, '_')
+        # Remove any multiple underscores
+        new_file.gsub!(/_+/, '_')
+        print "nf: #{new_file} fi: #{file}\n"
+        if File.exists?(new_file)
+          d_out.concat(sprintf("Cannot rename %s to %s: file already exists\n",
+                               Escape.shell_command(file),
+                               new_file))
+        else
+          if (! dry_run_flag)
+            # Maybe we should check for success or errors here?
+            print "renaming: #{file} to #{new_file}\n"
+            File.rename(file, new_file)
+            path_changed = true
+          end
+          d_out.concat(sprintf("%s -> %s",
+                               Escape.shell_command(file),
+                               new_file))
+        end
+      end
+      return [d_out, path_changed]
+    end
+
+
     def detox_test(file)
-      d_out = `#{Detox_exe} -nv #{Escape.shell_command(file)} 2>&1`
+      if File.file?(file)
+        d_out = `#{Detox_exe} -nv #{Escape.shell_command(file)} 2>&1`
+      else
+        # detox_dir(file, dry_run_flag)
+        # Ignore path_changed since it is always false when dry_run_flag is true.
+        d_out, path_changed = detox_dir(file, true) 
+      end
       return d_out;
     end
     
     def detox_do(file)
-      d_out = `#{Detox_exe} -v #{Escape.shell_command(file)} 2>&1`
-      return d_out
+      path_changed = false
+      if File.file?(file)
+        d_out = `#{Detox_exe} -v #{Escape.shell_command(file)} 2>&1`
+      else
+        # file, dry_run_flag
+        d_out, path_changed = detox_dir(file, false) 
+      end
+      return [d_out, path_changed]
     end
 
     def run_detox(working_path, log_full_name, brief_log_full_name)
@@ -887,26 +938,31 @@ module Rmatic
       # of detox and save the original and final names in a db. We probably
       # also need some notes about any interim names as a sanity check.
 
+      # Note that detox doesn't allow a dry run on a single directory,
+      # although it does allow dry run on a file. detox_do() and
+      # detox_test() compensate by calling Ruby code to test dir
+      # names, and the Ruby code returns the same format string as
+      # detox.
+
       # This wasn the original, simple command:
       #  `#{Detox_exe} -rv #{tub} >> #{igl_dest}/#{Fclean} 2>&1`
 
+      path_changed = false
       detox_log_text = "";
       detox_brief = ""
       
-      # Keep "file" as the original file name. The new name (if we
-      # need one) is working_fn and the interim previous name is old_fn.
+      # Note that a file could be a file or dir. Keep "file" as the
+      # original file name. The new name (if we need one) is
+      # working_fn and the interim previous name is old_fn.
       
       # Set up some vars that we'll use in the while loop. extname
       # includes the leading "." dot. Convince basename to exclude the
       # extension.
 
-      Rubymatica.traverse(working_path, false).each { |file|
-        if (! File.file?(file))
-          next
-        end
-        
+      Find.find(working_path) { |file|
+        # test a file name
         d_out = detox_test(file)
-
+        
         working_fn = file
         old_fn = working_fn
         suffix = 1; # Counting number start with one
@@ -924,7 +980,11 @@ module Rmatic
           detox_log_text.concat("#{d_out}")
 
           while (File.exists?(working_fn))
-            # Don't add an extra leading dot before my_ext
+            # Don't add an extra leading dot before my_ext. Happily,
+            # since extname retains the dot if there is an extension,
+            # this algo works for directories and files which have no
+            # extension.
+            
             working_fn = my_dir + "/" + my_base + "_" + suffix.to_s + my_ext
             suffix += 1
             if (suffix > 200)
@@ -950,7 +1010,7 @@ module Rmatic
           interim_fn = $1
           final_fn = $2
           detox_log_text.concat("Originally #{file}\n")
-          d_out = detox_do(working_fn)
+          d_out, path_changed = detox_do(working_fn)
           detox_log_text.concat("#{d_out}\n")
           detox_brief.concat("Original: #{file} Final: #{final_fn}")
           if (! interim_fn.eql?(file))
@@ -958,6 +1018,15 @@ module Rmatic
           end
           detox_brief.concat("\n")
         end # end if
+
+        # If a directory name has changed, we stop work, and
+        # return. The calling code will restart the recursive change
+        # of the directory tree. Given that Find.find() is static
+        # and can't be restarted, this break/recurse is necessary.
+        
+        if path_changed
+          break
+        end
       }
       
       # Write out the log files.
@@ -969,6 +1038,7 @@ module Rmatic
       File.open(brief_log_full_name, "wb") { |my_log|
         my_log.write(detox_brief)
       }
+      return path_changed
     end # end def run_detox
 
 
@@ -1494,9 +1564,15 @@ module Rmatic
 
       Rubymatica.save_status(dir_uuid, "Detox started...")
 
-      # (working_path, log_full_name, brief_log_full_name)
+      # run_detox(working_path, log_full_name, brief_log_full_name)
 
-      run_detox(tub, "#{igl_dest}/#{Fclean}", "#{igl_dest}/#{Fclean_brief}")
+      # If run_detox changes a path, it will immediately return with a
+      # true value, and the while loop will start it all over
+      # again. This may be crude but it is easier than dynamically
+      # recursing down a directory tree.
+
+      while(run_detox(tub, "#{igl_dest}/#{Fclean}", "#{igl_dest}/#{Fclean_brief}") == true)
+      end
 
       Rubymatica.save_status(dir_uuid, "Wrote #{igl_dest}/#{Fclean} and #{igl_dest}/#{Fclean_brief}")
       Rubymatica.save_status(dir_uuid, "Detox done")
