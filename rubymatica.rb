@@ -167,14 +167,16 @@ module Rmatic
     def set_message(str,flag)
       db = SQLite3::Database.new(@fn)
       if (! flag)
-        db.transaction
+        db.busy_timeout=1000 # milliseconds?
+        db.transaction(:immediate)
         stmt = db.prepare("delete from msg where user_id=?")
         stmt.execute(@user_id);
         stmt.close
         db.commit
       end
 
-      db.transaction
+      db.busy_timeout=1000 # milliseconds?
+      db.transaction(:immediate)
       stmt = db.prepare("insert into msg (user_id,msg_text) values (?,?)")
       stmt.execute(@user_id, str);
       stmt.close
@@ -188,7 +190,8 @@ module Rmatic
 
     def get_message
       db = SQLite3::Database.new(@fn)
-      db.transaction
+      db.busy_timeout=1000 # milliseconds?
+      db.transaction(:immediate)
       stmt = db.prepare("select msg_text from msg where user_id = ? order by id")
       ps = Proc_sql.new();
       stmt.execute(@user_id){ |rs|
@@ -265,7 +268,8 @@ module Rmatic
       end
       
       db = SQLite3::Database.new("#{fn}")
-      db.transaction
+      db.busy_timeout=1000 # milliseconds?
+      db.transaction(:immediate)
       stmt = db.prepare("insert into meta (name,value) values (?,?)")
       stmt.execute(name,value);
       stmt.close
@@ -303,8 +307,17 @@ module Rmatic
 
 
   class Detox_dic
-    # Build a hash for the detox file name changes. We have a method that
-    # inverts the hash.
+    # Build a hash for the detox file name changes to go between
+    # original and new name (and only files, not dirs). We have a
+    # method that inverts the hash. File names may not be what they
+    # were before detox, so we have to look at the detox logs to build
+    # the hashes.
+
+    # This suggests that every time a file name is fixed that we also
+    # update Uuid_log which is file_uuid.log. When we say "update"
+    # we're heading down the road of putting file_uuid.log into a SQL
+    # database. That's not bad thing either. This class has a lot of
+    # code for what should be a very simple problem.
     
     # Normal variables aren't accessible inside the block for
     # Builder.new. Dunno why. There's some comment in the Nokogiri docs
@@ -345,7 +358,10 @@ module Rmatic
         if (orig and fixed)
           orig.chomp!
           fixed.chomp!
-          if (! orig.empty? and ! fixed.empty?)
+          # @invert_dic only contains files, but we also fix dir names
+          # with detox. If the hash key is not in @invert_dic then
+          # don't try to add the value.
+          if (! orig.empty? and ! fixed.empty? and @invert_dic.has_key?(fixed))
             @detox_dic[@invert_dic[fixed]][:orig] = orig
           end
         end
@@ -814,7 +830,8 @@ module Rmatic
       end
       
       db = SQLite3::Database.new("#{fn}")
-      db.transaction
+      db.busy_timeout=1000 # milliseconds?
+      db.transaction(:immediate)
       stmt = db.prepare("insert into status (uuid, msg,date) values (?,?,datetime('now'))")
       stmt.execute(uuid,msg);
       stmt.close
