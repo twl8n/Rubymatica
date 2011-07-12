@@ -167,7 +167,8 @@ module Rmatic
     def set_message(str,flag)
       db = SQLite3::Database.new(@fn)
       if (! flag)
-        db.busy_timeout=1000 # milliseconds?
+        # db.busy_timeout=1000 # milliseconds?
+        db.busy_timeout(1000) # milliseconds?
         db.transaction(:immediate)
         stmt = db.prepare("delete from msg where user_id=?")
         stmt.execute(@user_id);
@@ -175,7 +176,8 @@ module Rmatic
         db.commit
       end
 
-      db.busy_timeout=1000 # milliseconds?
+      # db.busy_timeout=1000 # milliseconds?
+      db.busy_timeout(1000) # milliseconds?
       db.transaction(:immediate)
       stmt = db.prepare("insert into msg (user_id,msg_text) values (?,?)")
       stmt.execute(@user_id, str);
@@ -190,7 +192,8 @@ module Rmatic
 
     def get_message
       db = SQLite3::Database.new(@fn)
-      db.busy_timeout=1000 # milliseconds?
+      # db.busy_timeout=1000 # milliseconds?
+      db.busy_timeout(1000) # milliseconds?
       db.transaction(:immediate)
       stmt = db.prepare("select msg_text from msg where user_id = ? order by id")
       ps = Proc_sql.new();
@@ -268,7 +271,8 @@ module Rmatic
       end
       
       db = SQLite3::Database.new("#{fn}")
-      db.busy_timeout=1000 # milliseconds?
+      # db.busy_timeout=1000 # milliseconds?
+      db.busy_timeout(1000) # milliseconds?
       db.transaction(:immediate)
       stmt = db.prepare("insert into meta (name,value) values (?,?)")
       stmt.execute(name,value);
@@ -830,7 +834,8 @@ module Rmatic
       end
       
       db = SQLite3::Database.new("#{fn}")
-      db.busy_timeout=1000 # milliseconds?
+      # db.busy_timeout=1000 # milliseconds?
+      db.busy_timeout(1000) # milliseconds?
       db.transaction(:immediate)
       stmt = db.prepare("insert into status (uuid, msg,date) values (?,?,datetime('now'))")
       stmt.execute(uuid,msg);
