@@ -901,7 +901,7 @@ module Rmatic
             File.rename(file, new_file)
             path_changed = true
           end
-          d_out.concat(sprintf("%s -> %s",
+          d_out.concat(sprintf("%s -> %s\n",
                                Escape.shell_command(file),
                                new_file))
         end
