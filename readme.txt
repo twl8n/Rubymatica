@@ -226,7 +226,7 @@ How to install and run with Ruby Enterprise and CentOS 5
 
 The ruby and rails distro that is in the yum repo for Centos 5 does
 not work. You'll have to install some other ruby stack and the
-concensus seems to be Ruby Enterprise installed from source. Even with
+consensus seems to be Ruby Enterprise installed from source. Even with
 Ruby Enterprise, there are issues with some gems, so certain gems have
 to be removed and different versions installed. Happily this is easy.
 
